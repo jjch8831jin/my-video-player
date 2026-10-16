@@ -113,7 +113,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
 #wrap:fullscreen .stage,#wrap:-webkit-full-screen .stage{width:100%;height:100vh;border-radius:0;border:0}
 #wrap:fullscreen #xit,#wrap:-webkit-full-screen #xit{display:inline-flex;position:absolute;right:12px;top:12px;z-index:3;width:auto;padding:0 14px;gap:7px;font-weight:700;font-size:11pt;background:rgba(22,27,39,.92)}
 #wrap:fullscreen .msg,#wrap:-webkit-full-screen .msg{position:absolute;left:12px;top:12px;z-index:3;margin:0}
-#wrap:fullscreen .dock,#wrap:-webkit-full-screen .dock{position:absolute;z-index:3;left:50%;bottom:12px;transform:translateX(-50%);width:min(1100px,calc(100% - 24px));margin:0}
+#wrap:fullscreen .dock,#wrap:-webkit-full-screen .dock{position:absolute;z-index:3;left:50%;bottom:0;transform:translateX(-50%);width:min(1100px,calc(100% - 24px));margin:0}
 #wrap:fullscreen .bar,#wrap:-webkit-full-screen .bar{background:rgba(22,27,39,.93)}
 #wrap.pw{position:relative;width:100vw;height:100vh;background:#000;margin:0}
 #wrap.pw .stage{width:100%;height:100vh;border-radius:0;border:0}
@@ -476,6 +476,10 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
     wrap.classList.remove('nocur'); clearTimeout(curT);
     if(!v.paused && !inZone() && !anyPop()) curT = setTimeout(() => wrap.classList.add('nocur'), 1500);
   }, { passive: true });
+  // 마우스가 창(화면) 밖으로 나가면 바로 숨김 (밖에서는 마우스 이동 신호가 안 오기 때문)
+  const mouseGone = () => { if(!isFull()) return; lastPt = null; clearTimeout(hideT); clearTimeout(curT); wrap.classList.remove('nocur'); if(!v.paused && !anyPop()) wrap.classList.add('hide'); };
+  document.documentElement.addEventListener('mouseleave', mouseGone);
+  document.addEventListener('mouseout', e => { if(!e.relatedTarget) mouseGone(); });
   ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(e => document.addEventListener(e, () => { if(isFull()) showCtl(); }, { passive: true }));
   v.addEventListener('pause', () => { if(isFull()) showCtl(); });
   v.addEventListener('play', () => { if(isFull()) showCtl(); });

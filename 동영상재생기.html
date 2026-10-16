@@ -72,6 +72,16 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
 .bar .vol input{width:0;opacity:0;transition:width .2s,opacity .2s;margin:0}
 .bar .vol:hover input,.bar .vol:focus-within input{width:84px;opacity:1;margin-left:4px}
 #lipop{right:0;width:min(440px,100%);max-height:50vh;overflow:auto;padding:6px}
+.lhead{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 8px 12px;color:var(--mut);font-size:10.5pt}
+.clr{height:34px;padding:0 12px;border-radius:10px;background:var(--key);border:1px solid var(--line);color:var(--tx);font-weight:700;font-size:10.5pt;display:flex;align-items:center;gap:6px}
+.clr:hover{border-color:#6b3a3a;color:#fca5a5}
+.clr.arm{background:#4a1f26;border-color:#b4505c;color:#fecaca}
+.clr svg{width:16px;height:16px}
+.lrow{display:flex;align-items:center;gap:2px}
+.lrow .li{flex:1;min-width:0;width:auto}
+.dx{width:38px;height:38px;flex:none;border:0;background:none;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--mut)}
+.dx:hover{background:var(--key);color:#fca5a5}
+.dx svg{width:18px;height:18px}
 .li{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:9px 10px;font-size:11pt;color:var(--tx)}
 .li:hover{background:var(--key)}
 .li .n{color:var(--mut);min-width:1.8em;font-variant-numeric:tabular-nums}
@@ -167,6 +177,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
     <symbol id="i-zoom" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></symbol>
     <symbol id="i-prev" viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M19 5v14L9 12z" fill="currentColor" stroke="none"/></symbol>
     <symbol id="i-next" viewBox="0 0 24 24"><path d="M18 5v14"/><path d="M5 5v14l10-7z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
     <symbol id="i-eject" viewBox="0 0 24 24"><path d="M12 5l7 8H5z" fill="currentColor" stroke="none"/><path d="M5 18h14"/></symbol>
     <symbol id="i-list" viewBox="0 0 24 24"><path d="M3 6h14M3 12h14M3 18h8"/><path d="M16 15l5 3-5 3z" fill="currentColor" stroke="none"/></symbol>
     <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol>
@@ -325,15 +336,35 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
     const all = Array.from(list || []); if(!all.length) return;
     const good = all.filter(okFile);
     if(!good.length){ msg('동영상 파일이 아닙니다: ' + all[0].name); return; }
-    queue = good; qi = 0; play(0);
+    const key = f => f.name + '|' + f.size + '|' + f.lastModified;
+    const have = new Set(queue.map(key)), fresh = good.filter(f => !have.has(key(f)));
+    if(!fresh.length){ play(Math.max(0, queue.findIndex(q => key(q) === key(good[0])))); }
+    else { const first = queue.length; queue = queue.concat(fresh); play(first); }
     if(good.length < all.length) msg('동영상이 아닌 파일 ' + (all.length - good.length) + '개는 뺐습니다.');
+  }
+  function setNm(){
+    const f = queue[qi]; if(!f){ $('nm').textContent = ''; $('nm').title = ''; return; }
+    $('nm').textContent = (queue.length > 1 ? '(' + (qi + 1) + '/' + queue.length + ') ' : '') + f.name.replace(/\.[^.\/\\]+$/, ''); $('nm').title = f.name;
+  }
+  function emptyPlayer(){
+    queue = []; qi = 0; v.pause(); if(url){ URL.revokeObjectURL(url); url = null; } v.removeAttribute('src'); v.load();
+    setNm(); $('hint').style.display = ''; document.title = '동영상 재생기'; rot = 0; apply(); navUi(); renderList();
+  }
+  let clrArm = false, clrT = null;
+  function removeAt(i){
+    if(i < 0 || i >= queue.length) return;
+    queue.splice(i, 1);
+    if(!queue.length){ emptyPlayer(); return; }
+    if(i < qi){ qi--; setNm(); navUi(); renderList(); }
+    else if(i === qi){ play(Math.min(qi, queue.length - 1)); }
+    else { setNm(); navUi(); renderList(); }
   }
   function play(i){
     const f = queue[i]; if(!f) return;
     qi = i; msg('');
     if(url) URL.revokeObjectURL(url);
     url = URL.createObjectURL(f); rot = 0; v.src = url;
-    $('nm').textContent = (queue.length > 1 ? '(' + (i + 1) + '/' + queue.length + ') ' : '') + f.name.replace(/\.[^.\/\\]+$/, ''); $('nm').title = f.name; $('hint').style.display = 'none';
+    setNm(); $('hint').style.display = 'none';
     document.title = f.name + ' - 동영상 재생기';
     if(pw && !pw.closed){ try{ pw.document.title = f.name; }catch(e){} }
     v.load(); v.play().catch(() => {});
@@ -345,13 +376,26 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   function renderList(){
     const box = $('lipop'); box.innerHTML = '';
     if(!queue.length){ const d = document.createElement('div'); d.className = 'lempty'; d.textContent = '목록이 비어 있습니다. 열기 버튼으로 파일을 고르세요.'; box.appendChild(d); return; }
+    const head = document.createElement('div'); head.className = 'lhead';
+    const cnt = document.createElement('span'); cnt.textContent = '파일 ' + queue.length + '개';
+    const clr = document.createElement('button'); clr.type = 'button'; clr.className = 'clr' + (clrArm ? ' arm' : '');
+    clr.innerHTML = '<svg><use href="#i-x"/></svg>' + (clrArm ? '한 번 더 누르면 모두 지웁니다' : '모두 지우기');
+    clr.addEventListener('click', e => {
+      e.stopPropagation(); clearTimeout(clrT);
+      if(clrArm){ clrArm = false; emptyPlayer(); return; }
+      clrArm = true; renderList(); clrT = setTimeout(() => { clrArm = false; renderList(); }, 3000);
+    });
+    head.appendChild(cnt); head.appendChild(clr); box.appendChild(head);
     queue.forEach((f, i) => {
+      const row = document.createElement('div'); row.className = 'lrow';
       const b = document.createElement('button'); b.type = 'button'; b.className = 'li' + (i === qi ? ' cur' : '');
       const n = document.createElement('span'); n.className = 'n'; n.textContent = i + 1;
       const t = document.createElement('span'); t.className = 'f'; t.textContent = f.name;
       b.appendChild(n); b.appendChild(t);
       b.addEventListener('click', () => { play(i); closePops(); });
-      box.appendChild(b);
+      const x = document.createElement('button'); x.type = 'button'; x.className = 'dx'; x.setAttribute('aria-label', '목록에서 지우기'); x.innerHTML = '<svg><use href="#i-x"/></svg>';
+      x.addEventListener('click', e => { e.stopPropagation(); removeAt(i); });
+      row.appendChild(b); row.appendChild(x); box.appendChild(row);
     });
   }
   $('prev').addEventListener('click', prevF);

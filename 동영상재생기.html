@@ -30,7 +30,7 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .msg{font-size:11pt;color:#fca5a5}
 .msg:not(:empty){margin-top:8px}
 /* 한 줄 메뉴 */
-.dock{position:relative;width:var(--ww,100%);margin:10px auto 0;transition:opacity .3s}
+.dock{position:relative;width:var(--ww,100%);margin:10px auto 0;transition:opacity .2s}
 .bar{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px 8px}
 .brow{display:flex;align-items:center;gap:4px}
 .brow>*,.lg>*,.rg>*{flex:none}
@@ -468,8 +468,22 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   $('xit').addEventListener('click', exitFs);
 
   let wasHidden = false, hideT = null;
-  function showCtl(){ wrap.classList.remove('hide'); clearTimeout(hideT); if(isFull()) hideT = setTimeout(() => { if(!v.paused && !anyPop()) wrap.classList.add('hide'); }, 3000); }
-  ['mousemove', 'pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(e => document.addEventListener(e, () => { if(isFull()) showCtl(); }, { passive: true }));
+  // 마우스는 기다림 없이 바로 반응: 아래쪽 메뉴 자리(또는 오른쪽 위 나가기 버튼 자리)에 있으면 바로 나타나고, 벗어나면 바로 사라진다.
+  // 키보드·터치처럼 마우스 위치를 모를 때만 1.5초 뒤에 사라진다.
+  let lastPt = null;
+  const inZone = () => {
+    if(!lastPt) return false;
+    const d = $('dock').getBoundingClientRect(), W = wrap.clientWidth;
+    return lastPt.y >= d.top - 40 || (lastPt.y < 70 && lastPt.x > W - 280);
+  };
+  function showCtl(){ wrap.classList.remove('hide'); clearTimeout(hideT); if(isFull()) hideT = setTimeout(() => { if(!v.paused && !anyPop() && !inZone()) wrap.classList.add('hide'); }, 1500); }
+  document.addEventListener('mousemove', ev => {
+    if(!isFull()) return;
+    lastPt = { x: ev.clientX, y: ev.clientY };
+    clearTimeout(hideT);
+    if(inZone() || v.paused || anyPop()) wrap.classList.remove('hide'); else wrap.classList.add('hide');
+  }, { passive: true });
+  ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(e => document.addEventListener(e, () => { if(isFull()) showCtl(); }, { passive: true }));
   v.addEventListener('pause', () => { if(isFull()) showCtl(); });
   v.addEventListener('play', () => { if(isFull()) showCtl(); });
   v.addEventListener('pointerdown', () => { wasHidden = wrap.classList.contains('hide'); }, true);

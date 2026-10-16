@@ -17,7 +17,7 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .app{max-width:1200px;margin:0 auto;padding:14px;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
 .top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .top h1{margin:0;font-size:15pt;font-weight:700;letter-spacing:-.02em;flex:none}
-.fn{flex:1;min-width:0;color:var(--mut);font-size:11pt;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fn{flex:1;min-width:0;color:var(--tx);font-size:11pt;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;padding:0 10px}
 .open{background:var(--ac);color:#062925;border:0;border-radius:999px;height:40px;padding:0 16px;font-weight:700;font-size:11pt;display:inline-flex;align-items:center;gap:7px;flex:none}
 .open:hover{filter:brightness(1.08)}
 #wrap{flex:1;display:flex;flex-direction:column;width:100%;min-height:0}
@@ -34,6 +34,7 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .bar{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px 8px}
 .brow{display:flex;align-items:center;gap:4px}
 .brow>*,.lg>*,.rg>*{flex:none}
+.brow>.fn{flex:1 1 0;min-width:0}
 .lg,.rg{display:flex;align-items:center;gap:4px}
 .rg{margin-left:auto}
 .dv{width:1px;height:26px;background:#3a4357;margin:0 8px}
@@ -48,9 +49,10 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .pctb:hover{background:var(--key)}
 .t{font-variant-numeric:tabular-nums;color:var(--mut);font-size:10.5pt;min-width:2.6em}
 .t.r{text-align:right}
-#tm{display:block;min-width:0;font-size:10.5pt;margin-left:8px;white-space:nowrap}
+#tm{display:none!important;min-width:0;font-size:10.5pt;margin-left:8px;white-space:nowrap}
 #tm b{color:var(--tx);font-weight:400}
-#cur,#dur{display:none}
+#cur,#dur{display:block;flex:none;min-width:2.9em;font-size:10.5pt}
+#cur{text-align:left}
 input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;margin:0;width:100%;height:28px;cursor:pointer;min-width:0}
 input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--ac) var(--p,0%),var(--line) var(--p,0%))}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:0;margin-top:-5px;box-shadow:0 1px 4px rgba(0,0,0,.5)}
@@ -58,7 +60,8 @@ input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(
 input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--ac)}
 input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:0}
 input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:4px}
-.bar .seekw{width:100%;margin:0 0 4px}
+.bar .seekw{width:100%;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+.bar .seekw input{flex:1;width:auto}
 .bar .play svg{width:26px;height:26px}
 .ic{width:40px;height:40px;border-radius:11px;background:var(--key);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none;padding:0}
 .ic:hover{border-color:#3a4763}
@@ -170,10 +173,6 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   </defs>
 </svg>
 <div class="app">
-  <header class="top">
-    <h1>동영상 재생기</h1>
-    <div class="fn" id="nm"></div>
-  </header>
   <input type="file" id="fi" accept="video/*,audio/*" multiple hidden>
   <div id="wrap">
     <div class="stage" id="stage">
@@ -186,7 +185,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
       <div class="pop" id="mopop"></div>
       <div class="pop" id="lipop"></div>
       <div class="bar" id="bar">
-        <div class="seekw"><input type="range" id="seek" min="0" max="1000" value="0" step="1" aria-label="재생 위치"></div>
+        <div class="seekw"><span class="t" id="cur">0:00</span><input type="range" id="seek" min="0" max="1000" value="0" step="1" aria-label="재생 위치"><span class="t r" id="dur">0:00</span></div>
         <div class="brow">
           <div class="lg" id="lg">
             <button class="ic play" id="pp" type="button" aria-label="재생"><svg><use href="#i-play"/></svg></button>
@@ -194,10 +193,9 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
             <button class="ic" id="prev" type="button" aria-label="이전 파일" disabled><svg><use href="#i-prev"/></svg></button>
             <button class="ic" id="next" type="button" aria-label="다음 파일" disabled><svg><use href="#i-next"/></svg></button>
             <div class="vol" id="vol"><button class="ic" id="mute" type="button" aria-label="음소거"><svg><use href="#i-vol"/></svg></button><input type="range" id="vl" min="0" max="100" value="100" step="1" aria-label="소리 크기"></div>
-            <span class="t" id="cur">0:00</span>
-            <span class="t" id="tm"></span>
-            <span class="t r" id="dur">0:00</span>
+            <span id="tm" hidden></span>
           </div>
+          <div class="fn" id="nm"></div>
           <div class="rg" id="rg">
             <button class="ic" id="more" type="button" aria-label="더보기"><svg><use href="#i-more"/></svg></button>
             <button class="ic" id="b10" type="button" aria-label="10초 뒤로"><svg><use href="#i-back"/></svg></button>
@@ -268,10 +266,10 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
       if(nw){
         [$('stop'), $('b10'), $('f10'), $('spd'), $('loop')].forEach(n => row1.appendChild(n));
         [$('vol'), $('zg'), $('full')].forEach(n => row2.appendChild(n));
-        [$('pp'), $('prev'), $('next'), $('cur'), $('tm'), $('dur')].forEach(n => lg.appendChild(n));
+        [$('pp'), $('prev'), $('next')].forEach(n => lg.appendChild(n));
         [$('more'), $('dv'), $('open'), $('list')].forEach(n => rg.appendChild(n));
       } else {
-        [$('pp'), $('stop'), $('prev'), $('next'), $('vol'), $('cur'), $('tm'), $('dur')].forEach(n => lg.appendChild(n));
+        [$('pp'), $('stop'), $('prev'), $('next'), $('vol')].forEach(n => lg.appendChild(n));
         [$('more'), $('b10'), $('f10'), $('spd'), $('loop'), $('zg'), $('full'), $('dv'), $('open'), $('list')].forEach(n => rg.appendChild(n));
         pops.more.classList.remove('show'); $('more').classList.remove('on'); // 크기 카드는 열어 둔 채 (확대하다 막대 모양이 바뀌어도 안 닫힘)
       }
@@ -335,7 +333,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
     qi = i; msg('');
     if(url) URL.revokeObjectURL(url);
     url = URL.createObjectURL(f); rot = 0; v.src = url;
-    $('nm').textContent = (queue.length > 1 ? '(' + (i + 1) + '/' + queue.length + ') ' : '') + f.name; $('hint').style.display = 'none';
+    $('nm').textContent = (queue.length > 1 ? '(' + (i + 1) + '/' + queue.length + ') ' : '') + f.name.replace(/\.[^.\/\\]+$/, ''); $('nm').title = f.name; $('hint').style.display = 'none';
     document.title = f.name + ' - 동영상 재생기';
     if(pw && !pw.closed){ try{ pw.document.title = f.name; }catch(e){} }
     v.load(); v.play().catch(() => {});

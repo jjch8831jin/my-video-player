@@ -374,7 +374,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   ['dragleave', 'drop'].forEach(e => document.addEventListener(e, ev => { ev.preventDefault(); stage.classList.remove('drag'); }));
   document.addEventListener('drop', ev => { loadQueue(ev.dataTransfer && ev.dataTransfer.files); });
 
-  v.addEventListener('loadedmetadata', () => { $('dur').textContent = fmt(v.duration); tmUpd(); doFit(); });
+  v.addEventListener('loadedmetadata', () => { $('dur').textContent = fmt(v.duration); tmUpd(); const f = fitScale(); if(f < 100) setScale(f, 'fit'); else setScale(100, 'free'); }); // 처음엔 원래 크기(100%), 화면보다 크면 화면에 맞게 줄임
   v.addEventListener('error', () => { msg('이 브라우저에서 재생할 수 없는 파일입니다.'); });
   const setPP = () => { const playing = !v.paused && !v.ended; ico($('pp'), playing ? 'i-pause' : 'i-play'); $('pp').setAttribute('aria-label', playing ? '일시정지' : '재생'); };
   v.addEventListener('play', setPP); v.addEventListener('pause', setPP); v.addEventListener('ended', setPP);

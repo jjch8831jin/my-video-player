@@ -400,7 +400,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   let popHome = null, popNote = null, savedView = null;
   // 전체화면·별도 창에 들어가면 창에 꽉 차게 맞추고, 나오면 원래 보던 크기로 돌린다
   const enterFull = () => { if(!savedView) savedView = { scale: scale, mode: mode }; doFit(); };
-  const leaveFull = () => { if(savedView){ const sv = savedView; savedView = null; setScale(sv.scale, sv.mode); } else if(mode === 'fit') doFit(); else apply(); };
+  const leaveFull = () => { if(savedView){ const sv = savedView; savedView = null; setScale(sv.scale, sv.mode); if(sv.mode === 'fit') doFit(); else if(sv.scale <= 100){ const f = fitScale(); if(f < 100) setScale(f, 'fit'); } } else if(mode === 'fit') doFit(); else apply(); };
   const wantPop = () => !(/Android|iPhone|iPad/i.test(navigator.userAgent) || (window.matchMedia && matchMedia('(pointer:coarse)').matches));
   function popOut(){
     let P = {}; try{ P = JSON.parse(localStorage.getItem('vpWin') || '{}') || {}; }catch(e){}
@@ -443,7 +443,6 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   window.addEventListener('pagehide', () => { try{ if(pw){ const w = pw; pw = null; w.close(); } }catch(e){} });
 
   const enterFs = () => {
-    if(!(pw && !pw.closed) && !fsEl() && wantPop() && v.src && popOut()) return; // PC: 전체화면 버튼 = 별도 창
     if(fsEl()){ exitFs(); return; }
     const req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
     if(req){ try{ const r = req.call(wrap); if(r && r.catch) r.catch(() => { if(v.webkitEnterFullscreen) try{ v.webkitEnterFullscreen(); }catch(e){} }); }catch(e){} }

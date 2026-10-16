@@ -224,7 +224,7 @@ html,body{height:100%;overflow:hidden}
 <div class="app">
   <input type="file" id="fi" accept="video/*,audio/*" multiple hidden>
   <div id="wrap">
-    <div class="mbar" id="mbar"><div class="mi"><button class="mt" type="button">파일</button><div class="md"><button class="mx" type="button" data-c="open">동영상 열기</button><button class="mx" type="button" data-c="list">재생 목록</button></div></div><div class="mi"><button class="mt" type="button">재생</button><div class="md"><button class="mx" type="button" data-c="pp">재생 / 일시정지<i>Space</i></button><button class="mx" type="button" data-c="stop">정지</button><button class="mx" type="button" data-c="prev" id="mx-prev">이전 파일<i>P</i></button><button class="mx" type="button" data-c="next" id="mx-next">다음 파일<i>N</i></button><button class="mx" type="button" data-c="b10">10초 뒤로</button><button class="mx" type="button" data-c="f10">10초 앞으로</button><button class="mx" type="button" data-c="loop">반복</button><button class="mx" type="button" data-c="spd">재생 속도 바꾸기</button></div></div><div class="mi"><button class="mt" type="button">보기</button><div class="md"><button class="mx" type="button" data-c="full">전체화면<i>F</i></button><button class="mx" type="button" data-c="orig">원래 크기 (100%)<i>0</i></button><button class="mx" type="button" data-c="sp">크게<i>+</i></button><button class="mx" type="button" data-c="sm">작게<i>−</i></button><button class="mx" type="button" data-c="rot">90° 회전</button></div></div><div class="mi"><button class="mt" type="button">도움말</button><div class="md"><div class="mh">재생 / 일시정지<i>Space</i></div><div class="mh">5초 뒤로 / 앞으로<i>← →</i></div><div class="mh">소리 크게 / 작게<i>↑ ↓</i></div><div class="mh">음소거<i>M</i></div><div class="mh">이전 / 다음 파일<i>P / N</i></div><div class="mh">전체화면<i>F</i></div><div class="mh">크게 / 작게 / 100%<i>+ − 0</i></div></div></div></div>
+    <div class="mbar" id="mbar"><div class="mi"><button class="mt" type="button">파일</button><div class="md"><button class="mx" type="button" data-c="open">동영상 열기</button><button class="mx" type="button" data-c="list">재생 목록</button></div></div><div class="mi"><button class="mt" type="button">재생</button><div class="md"><button class="mx" type="button" data-c="pp">재생 / 일시정지<i>Space</i></button><button class="mx" type="button" data-c="stop">정지</button><button class="mx" type="button" data-c="prev" id="mx-prev">이전 파일<i>P</i></button><button class="mx" type="button" data-c="next" id="mx-next">다음 파일<i>N</i></button><button class="mx" type="button" data-c="b10">10초 뒤로</button><button class="mx" type="button" data-c="f10">10초 앞으로</button><button class="mx" type="button" data-c="loop">반복</button><button class="mx" type="button" data-c="spd">재생 속도 바꾸기</button></div></div><div class="mi"><button class="mt" type="button">보기</button><div class="md"><button class="mx" type="button" data-c="full">전체화면<i>F</i></button><button class="mx" type="button" data-c="orig">원래 크기 (100%)<i>0</i></button><button class="mx" type="button" data-c="rst">처음 화면으로</button><button class="mx" type="button" data-c="sp">크게<i>+</i></button><button class="mx" type="button" data-c="sm">작게<i>−</i></button><button class="mx" type="button" data-c="rot">90° 회전</button></div></div><div class="mi"><button class="mt" type="button">도움말</button><div class="md"><div class="mh">재생 / 일시정지<i>Space</i></div><div class="mh">5초 뒤로 / 앞으로<i>← →</i></div><div class="mh">소리 크게 / 작게<i>↑ ↓</i></div><div class="mh">음소거<i>M</i></div><div class="mh">이전 / 다음 파일<i>P / N</i></div><div class="mh">전체화면<i>F</i></div><div class="mh">크게 / 작게 / 100%<i>+ − 0</i></div></div></div></div>
     <div class="stage" id="stage">
       <video id="v" playsinline></video>
       <div class="hint" id="hint"><button type="button" id="open2"><svg><use href="#i-folder"/></svg>동영상 열기</button><div>또는 파일을 여기로 끌어다 놓으세요</div></div>
@@ -371,7 +371,12 @@ html,body{height:100%;overflow:hidden}
     const key = f => f.name + '|' + f.size + '|' + f.lastModified;
     const have = new Set(queue.map(key)), fresh = good.filter(f => !have.has(key(f)));
     if(!fresh.length){ play(Math.max(0, queue.findIndex(q => key(q) === key(good[0])))); }
-    else { const first = queue.length; queue = queue.concat(fresh); play(first); }
+    else {
+      // 파일의 수정 날짜가 최신인 것이 위로 (날짜가 같으면 먼저 있던 순서 유지). 새로 가져온 것 중 가장 위의 파일을 재생.
+      const byDate = (x, y) => (y.lastModified || 0) - (x.lastModified || 0);
+      const top = fresh.slice().sort(byDate)[0];
+      queue = queue.concat(fresh).sort(byDate); play(queue.indexOf(top));
+    }
     if(good.length < all.length) msg('동영상이 아닌 파일 ' + (all.length - good.length) + '개는 뺐습니다.');
   }
   function setNm(){
@@ -599,7 +604,10 @@ html,body{height:100%;overflow:hidden}
       if(t){ const m = t.parentNode, was = m.classList.contains('sel'); close(); if(!was) m.classList.add('sel'); t.blur(); return; }
       const x = e.target.closest('.mx'); if(!x || x.disabled) return;
       close(); x.blur();
-      const id = x.dataset.c; if(id === 'pp') toggle(); else { const b = $(id); if(b) b.click(); }
+      const id = x.dataset.c;
+      if(id === 'pp') toggle();
+      else if(id === 'rst'){ rot = 0; const f = fitScale(); if(f < 100) setScale(f, 'fit'); else setScale(100, 'free'); stage.scrollLeft = 0; stage.scrollTop = 0; } // 처음 열었을 때의 크기·회전으로
+      else { const b = $(id); if(b) b.click(); }
     });
     bar.addEventListener('mouseover', e => { const t = e.target.closest('.mt'); if(!t || !bar.querySelector('.mi.sel')) return; const m = t.parentNode; if(!m.classList.contains('sel')){ close(); m.classList.add('sel'); } });
     document.addEventListener('pointerdown', e => { if(!e.target.closest('#mbar')) close(); }, true);

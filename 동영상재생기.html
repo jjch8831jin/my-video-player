@@ -120,7 +120,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
 #wrap.pw .bar{background:rgba(22,27,39,.93)}
 .popnote{border:1px dashed var(--line);border-radius:14px;color:var(--mut);font-size:12pt;text-align:center;padding:40px 16px}
 #wrap.hide .dock,#wrap.hide #xit{opacity:0;pointer-events:none}
-#wrap.hide{cursor:none}
+#wrap.nocur,#wrap.nocur *{cursor:none}
 @media (max-width:860px){
 }
 #wrap.nw .dv{display:none}
@@ -279,7 +279,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
       } else {
         [$('pp'), $('stop'), $('prev'), $('next'), $('vol'), $('cur'), $('tm'), $('dur')].forEach(n => lg.appendChild(n));
         [$('more'), $('b10'), $('f10'), $('spd'), $('loop'), $('zoom'), $('full'), $('dv'), $('open'), $('list')].forEach(n => rg.appendChild(n));
-        closePops();
+        pops.more.classList.remove('show'); $('more').classList.remove('on'); // 크기 카드는 열어 둔 채 (확대하다 막대 모양이 바뀌어도 안 닫힘)
       }
     };
   })();
@@ -374,7 +374,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   ['dragleave', 'drop'].forEach(e => document.addEventListener(e, ev => { ev.preventDefault(); stage.classList.remove('drag'); }));
   document.addEventListener('drop', ev => { loadQueue(ev.dataTransfer && ev.dataTransfer.files); });
 
-  v.addEventListener('loadedmetadata', () => { $('dur').textContent = fmt(v.duration); tmUpd(); const f = fitScale(); if(f < 100) setScale(f, 'fit'); else setScale(100, 'free'); });
+  v.addEventListener('loadedmetadata', () => { $('dur').textContent = fmt(v.duration); tmUpd(); doFit(); });
   v.addEventListener('error', () => { msg('이 브라우저에서 재생할 수 없는 파일입니다.'); });
   const setPP = () => { const playing = !v.paused && !v.ended; ico($('pp'), playing ? 'i-pause' : 'i-play'); $('pp').setAttribute('aria-label', playing ? '일시정지' : '재생'); };
   v.addEventListener('play', setPP); v.addEventListener('pause', setPP); v.addEventListener('ended', setPP);
@@ -443,7 +443,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
     const was = !v.paused;
     try{ popHome.parentNode.insertBefore(wrap, popHome); popHome.remove(); popNote.remove(); }catch(e){}
     popHome = popNote = null;
-    wrap.classList.remove('pw', 'hide'); closePops();
+    wrap.classList.remove('pw', 'hide', 'nocur'); clearTimeout(curT); closePops();
     if(was) v.play().catch(() => {});
     leaveFull();
     try{ w.close(); }catch(e){}
@@ -470,18 +470,21 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   let wasHidden = false, hideT = null;
   // 마우스는 기다림 없이 바로 반응: 아래쪽 메뉴 자리(또는 오른쪽 위 나가기 버튼 자리)에 있으면 바로 나타나고, 벗어나면 바로 사라진다.
   // 키보드·터치처럼 마우스 위치를 모를 때만 1.5초 뒤에 사라진다.
-  let lastPt = null;
+  let lastPt = null, curT = null;
   const inZone = () => {
     if(!lastPt) return false;
     const d = $('dock').getBoundingClientRect(), W = wrap.clientWidth;
     return lastPt.y >= d.top - 40 || (lastPt.y < 70 && lastPt.x > W - 280);
   };
-  function showCtl(){ wrap.classList.remove('hide'); clearTimeout(hideT); if(isFull()) hideT = setTimeout(() => { if(!v.paused && !anyPop() && !inZone()) wrap.classList.add('hide'); }, 1500); }
+  function showCtl(){ wrap.classList.remove('hide', 'nocur'); clearTimeout(hideT); if(isFull()) hideT = setTimeout(() => { if(!v.paused && !anyPop() && !inZone()) wrap.classList.add('hide'); }, 1500); }
   document.addEventListener('mousemove', ev => {
     if(!isFull()) return;
     lastPt = { x: ev.clientX, y: ev.clientY };
     clearTimeout(hideT);
     if(inZone() || v.paused || anyPop()) wrap.classList.remove('hide'); else wrap.classList.add('hide');
+    // 마우스 화살표는 움직이는 동안 항상 보이고, 1.5초 가만히 있을 때만 숨긴다
+    wrap.classList.remove('nocur'); clearTimeout(curT);
+    if(!v.paused && !inZone() && !anyPop()) curT = setTimeout(() => wrap.classList.add('nocur'), 1500);
   }, { passive: true });
   ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(e => document.addEventListener(e, () => { if(isFull()) showCtl(); }, { passive: true }));
   v.addEventListener('pause', () => { if(isFull()) showCtl(); });
@@ -490,7 +493,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   v.addEventListener('click', () => { if(wasHidden){ wasHidden = false; return; } if(v.src) toggle(); });
   v.addEventListener('dblclick', enterFs);
   const fsChange = () => {
-    wrap.classList.remove('hide'); clearTimeout(hideT); v.style.width = ''; v.style.height = ''; closePops();
+    wrap.classList.remove('hide', 'nocur'); clearTimeout(hideT); clearTimeout(curT); v.style.width = ''; v.style.height = ''; closePops();
     const inFs = fsEl() === wrap; ico($('full'), inFs ? 'i-min' : 'i-max'); $('full').setAttribute('aria-label', inFs ? '전체화면 해제' : '전체화면');
     setTimeout(() => { if(isFull()) enterFull(); else leaveFull(); if(isFull()) showCtl(); }, 60);
   };

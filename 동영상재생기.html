@@ -30,7 +30,7 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .msg{font-size:11pt;color:#fca5a5}
 .msg:not(:empty){margin-top:8px}
 /* 한 줄 메뉴 */
-.dock{position:relative;width:var(--ww,100%);margin:10px auto 0;transition:opacity .2s}
+.dock{position:sticky;bottom:10px;z-index:5;width:var(--ww,100%);margin:10px auto 0;transition:opacity .2s}
 .bar{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px 8px}
 .brow{display:flex;align-items:center;gap:4px}
 .brow>*,.lg>*,.rg>*{flex:none}
@@ -42,7 +42,12 @@ svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .bar .ic.on{color:var(--ac)}
 .bar .ic.sp{width:auto;min-width:44px;padding:0 8px}
 .bar .ic[disabled]{opacity:.35;cursor:default}.bar .ic[disabled]:hover{background:none}
-.bar .pill{margin:0 4px}
+.zg{display:flex;align-items:center;gap:0;margin:0 4px}
+.zg input[type=range]{width:104px;flex:none}
+.pctb{height:36px;min-width:58px;padding:0 8px;border-radius:10px;background:var(--key);border:1px solid var(--line);color:var(--ac2);font-weight:700;font-size:11pt;font-variant-numeric:tabular-nums;flex:none;margin:0 2px}
+.pctb:hover{border-color:#3a4763}
+.pctb.on,.bar .ic.on{border-color:var(--ac)}
+#fit.on{color:var(--ac)}
 .t{font-variant-numeric:tabular-nums;color:var(--mut);font-size:10.5pt;min-width:2.6em}
 .t.r{text-align:right}
 #tm{display:block;min-width:0;font-size:10.5pt;margin-left:8px;white-space:nowrap}
@@ -79,7 +84,6 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
 /* 펼침 카드 */
 .pop{position:absolute;bottom:calc(100% + 8px);background:var(--panel);border:1px solid #3a4763;border-radius:14px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.6);z-index:6;display:none}
 .pop.show{display:block}
-#szpop{right:0;width:min(460px,100%)}
 #mopop{left:0;right:0}
 .sz{display:flex;align-items:center;gap:8px}
 .pct{font-size:19pt;font-weight:700;color:var(--ac2);min-width:3.3em;text-align:right;font-variant-numeric:tabular-nums;letter-spacing:-.02em;flex:none}
@@ -127,7 +131,8 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
 #wrap.nw #tm{margin-left:4px;font-size:10pt}
 #wrap.nw #more{display:flex}
 #wrap.nw .pill{padding:0 9px}
-#wrap.nw #szpop{left:0;right:0;width:auto}
+#wrap.nw .zg{flex:1}
+#wrap.nw .zg input[type=range]{flex:1;width:auto}
 @media (max-width:640px){
   .app{padding:8px}
   .top h1{font-size:13pt}
@@ -181,18 +186,6 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
     <button class="ic" id="xit" type="button"><svg><use href="#i-min"/></svg>전체화면 나가기</button>
     <div class="msg" id="msg" role="status"></div>
     <div class="dock" id="dock">
-      <div class="pop" id="szpop">
-        <div class="sz">
-          <button class="ic" id="sm" type="button" aria-label="작게"><svg><use href="#i-minus"/></svg></button>
-          <div class="ruler"><div class="rt" id="rt"></div><input type="range" id="sz" min="0" max="1000" value="565" step="1" aria-label="화면 크기"></div>
-          <button class="ic" id="sp" type="button" aria-label="크게"><svg><use href="#i-plus"/></svg></button>
-          <div class="pct" id="lb">100%</div>
-        </div>
-        <div class="chips">
-          <button class="chip" id="fit" type="button"><svg><use href="#i-fit"/></svg>맞춤</button>
-          <button class="chip" id="orig" type="button"><svg><use href="#i-one"/></svg>원래 크기</button>
-        </div>
-      </div>
       <div class="pop" id="mopop"></div>
       <div class="pop" id="lipop"></div>
       <div class="bar" id="bar">
@@ -214,7 +207,13 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
             <button class="ic" id="f10" type="button" aria-label="10초 앞으로"><svg><use href="#i-fwd"/></svg></button>
             <button class="ic sp" id="spd" type="button" aria-label="재생 속도">1×</button>
             <button class="ic" id="loop" type="button" aria-label="반복"><svg><use href="#i-loop"/></svg></button>
-            <button class="pill" id="zoom" type="button" aria-label="화면 크기"><svg><use href="#i-zoom"/></svg><span id="lb2">100%</span></button>
+            <div class="zg" id="zg">
+              <button class="ic" id="sm" type="button" aria-label="작게"><svg><use href="#i-minus"/></svg></button>
+              <input type="range" id="sz" min="0" max="1000" value="565" step="1" aria-label="화면 크기">
+              <button class="ic" id="sp" type="button" aria-label="크게"><svg><use href="#i-plus"/></svg></button>
+              <button class="pctb" id="orig" type="button" aria-label="원래 크기(100%)"><span id="lb2">100%</span></button>
+              <button class="ic" id="fit" type="button" aria-label="화면에 맞춤"><svg><use href="#i-fit"/></svg></button>
+            </div>
             <button class="ic" id="full" type="button" aria-label="전체화면"><svg><use href="#i-max"/></svg></button>
             <div class="dv" id="dv"></div>
             <button class="ic" id="open" type="button" aria-label="열기"><svg><use href="#i-eject"/></svg></button>
@@ -254,41 +253,33 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   const tmUpd = () => { $('tm').innerHTML = '<b>' + fmt(v.currentTime) + '</b> / ' + fmt(v.duration || 0); };
 
   // 펼침 카드 (크기 / 더보기)
-  const pops = { zoom: $('szpop'), more: $('mopop'), list: $('lipop') };
-  const closePops = () => { Object.values(pops).forEach(p => p.classList.remove('show')); $('zoom').classList.remove('on'); $('more').classList.remove('on'); $('list').classList.remove('on'); };
+  const pops = { more: $('mopop'), list: $('lipop') };
+  const closePops = () => { Object.values(pops).forEach(p => p.classList.remove('show')); $('more').classList.remove('on'); $('list').classList.remove('on'); };
   const anyPop = () => Object.values(pops).some(p => p.classList.contains('show'));
   const togglePop = k => { const was = pops[k].classList.contains('show'); closePops(); if(!was){ pops[k].classList.add('show'); $(k).classList.add('on'); } if(isFull()) showCtl(); };
-  $('zoom').addEventListener('click', () => togglePop('zoom'));
   $('more').addEventListener('click', () => togglePop('more'));
   $('list').addEventListener('click', () => { renderList(); togglePop('list'); });
-  document.addEventListener('pointerdown', e => { if(anyPop() && !e.target.closest('.pop') && !e.target.closest('#zoom') && !e.target.closest('#more') && !e.target.closest('#list')) closePops(); }, true);
+  document.addEventListener('pointerdown', e => { if(anyPop() && !e.target.closest('.pop') && !e.target.closest('#more') && !e.target.closest('#list')) closePops(); }, true);
   // 폰: 보조 버튼들을 ⋯ 카드로 옮김
   let setNarrow = () => {};
   (function(){
     const mo = $('mopop'), lg = $('lg'), rg = $('rg');
     const row1 = document.createElement('div'); row1.className = 'mrow'; const row2 = document.createElement('div'); row2.className = 'mrow';
-    mo.appendChild(row1); mo.appendChild(row2);
+    const row3 = document.createElement('div'); row3.className = 'mrow'; mo.appendChild(row1); mo.appendChild(row2); mo.appendChild(row3);
     let cur = null;
     setNarrow = nw => {
       if(nw === cur) return; cur = nw; wrap.classList.toggle('nw', nw);
       if(nw){
         [$('stop'), $('b10'), $('f10'), $('spd'), $('loop')].forEach(n => row1.appendChild(n));
-        [$('vol'), $('zoom'), $('full')].forEach(n => row2.appendChild(n));
+        [$('vol'), $('full')].forEach(n => row2.appendChild(n)); row3.appendChild($('zg'));
         [$('pp'), $('prev'), $('next'), $('cur'), $('tm'), $('dur')].forEach(n => lg.appendChild(n));
         [$('more'), $('dv'), $('open'), $('list')].forEach(n => rg.appendChild(n));
       } else {
         [$('pp'), $('stop'), $('prev'), $('next'), $('vol'), $('cur'), $('tm'), $('dur')].forEach(n => lg.appendChild(n));
-        [$('more'), $('b10'), $('f10'), $('spd'), $('loop'), $('zoom'), $('full'), $('dv'), $('open'), $('list')].forEach(n => rg.appendChild(n));
+        [$('more'), $('b10'), $('f10'), $('spd'), $('loop'), $('zg'), $('full'), $('dv'), $('open'), $('list')].forEach(n => rg.appendChild(n));
         pops.more.classList.remove('show'); $('more').classList.remove('on'); // 크기 카드는 열어 둔 채 (확대하다 막대 모양이 바뀌어도 안 닫힘)
       }
     };
-  })();
-
-  // 눈금자
-  (function(){
-    const rt = $('rt'), minor = [5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, 200, 250, 300, 400, 500, 600, 800, 1000], major = [5, 10, 25, 50, 100, 200, 400, 1000];
-    minor.forEach(p => { const i = document.createElement('i'); i.style.left = toT(p) / 10 + '%'; if(major.includes(p)) i.className = 'm'; rt.appendChild(i); });
-    [[10, ''], [100, ''], [400, 'h'], [1000, 'e']].forEach(([p, c]) => { const s = document.createElement('span'); s.textContent = p + (p === 1000 ? '%' : ''); s.style.left = toT(p) / 10 + '%'; if(c) s.className = c; rt.appendChild(s); });
   })();
 
   function nat(){ return { w: v.videoWidth || 0, h: v.videoHeight || 0 }; }
@@ -301,22 +292,23 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
     return { w: Math.max(240, Math.floor(w)), h: Math.max(200, Math.floor(h)) };
   }
   function layoutStage(){
-    if(isFull()){ setNarrow($('dock').getBoundingClientRect().width < 720); return; }
+    if(isFull()){ setNarrow($('dock').getBoundingClientRect().width < 1010); return; }
     const n = nat(), a = avail();
     if(!n.w){ wrap.style.removeProperty('--ww'); stage.style.removeProperty('--sw'); stage.style.removeProperty('--sh'); }
     else {
-      const sw = Math.round(n.w * scale / 100) + 2, sh = Math.round(n.h * scale / 100) + 2;
+      const sw = Math.min(Math.round(n.w * scale / 100) + 2, a.w), sh = Math.min(Math.round(n.h * scale / 100) + 2, a.h);
       stage.style.setProperty('--sw', sw + 'px'); stage.style.setProperty('--sh', sh + 'px');
       wrap.style.setProperty('--ww', Math.min(Math.max(sw, 360), a.w) + 'px');
     }
-    setNarrow($('dock').getBoundingClientRect().width < 720);
+    setNarrow($('dock').getBoundingClientRect().width < 1010);
   }
   function apply(){
     const n = nat();
     if(n.w){ v.style.width = Math.round(n.w * scale / 100) + 'px'; v.style.height = Math.round(n.h * scale / 100) + 'px'; }
     else { v.style.width = ''; v.style.height = ''; }
     sz.value = toT(scale);
-    $('lb').textContent = Math.round(scale) + '%'; $('lb2').textContent = Math.round(scale) + '%';
+    prog(sz, sz.value / 10);
+    $('lb2').textContent = Math.round(scale) + '%';
     $('fit').classList.toggle('on', mode === 'fit');
     $('orig').classList.toggle('on', mode !== 'fit' && Math.round(scale) === 100);
     layoutStage();
@@ -374,7 +366,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   ['dragleave', 'drop'].forEach(e => document.addEventListener(e, ev => { ev.preventDefault(); stage.classList.remove('drag'); }));
   document.addEventListener('drop', ev => { loadQueue(ev.dataTransfer && ev.dataTransfer.files); });
 
-  v.addEventListener('loadedmetadata', () => { $('dur').textContent = fmt(v.duration); tmUpd(); setScale(100, 'free'); }); // 파일을 열면 크든 작든 항상 원래 크기(100%)
+  v.addEventListener('loadedmetadata', () => { $('dur').textContent = fmt(v.duration); tmUpd(); const f = fitScale(); if(f < 100) setScale(f, 'fit'); else setScale(100, 'free'); }); // 100%로 시작, 창보다 크면 창에 맞게 줄임(스크롤바 없음)
   v.addEventListener('error', () => { msg('이 브라우저에서 재생할 수 없는 파일입니다.'); });
   const setPP = () => { const playing = !v.paused && !v.ended; ico($('pp'), playing ? 'i-pause' : 'i-play'); $('pp').setAttribute('aria-label', playing ? '일시정지' : '재생'); };
   v.addEventListener('play', setPP); v.addEventListener('pause', setPP); v.addEventListener('ended', setPP);

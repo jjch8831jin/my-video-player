@@ -290,9 +290,9 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
     const n = nat(), a = avail();
     if(!n.w){ wrap.style.removeProperty('--ww'); stage.style.removeProperty('--sw'); stage.style.removeProperty('--sh'); }
     else {
-      const sw = Math.min(Math.round(n.w * scale / 100) + 2, a.w), sh = Math.min(Math.round(n.h * scale / 100) + 2, a.h);
-      stage.style.setProperty('--sw', sw + 'px'); stage.style.setProperty('--sh', sh + 'px');
-      wrap.style.setProperty('--ww', Math.min(Math.max(sw, 360), a.w) + 'px');
+      // 틀(검은 창)과 메뉴는 창 폭 그대로. 영상이 틀보다 크면 틀 안에서 스크롤.
+      stage.style.removeProperty('--sw'); stage.style.setProperty('--sh', a.h + 'px');
+      wrap.style.removeProperty('--ww');
     }
     setNarrow($('dock').getBoundingClientRect().width < 800);
   }

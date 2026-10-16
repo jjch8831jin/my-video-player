@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0e121b">
+<link rel="manifest" href="vp-manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="vp-favicon-32.png">
+<link rel="apple-touch-icon" href="vp-apple-touch-icon.png">
 <title>동영상 재생기</title>
 <style>
 :root{--bg:#0e121b;--panel:#161b27;--key:#1f2636;--line:#273045;--tx:#e8ecf4;--mut:#8b95ab;--ac:#5eead4;--ac2:#f5b84b}
@@ -504,6 +507,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   });
   apply(); prog(seek, 0);
 })();
+try{ if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./vp-sw.js').catch(()=>{}); }catch(e){}
 </script>
 </body>
 </html>

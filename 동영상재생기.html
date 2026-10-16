@@ -459,7 +459,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   let wasHidden = false, hideT = null;
   // 마우스는 기다림 없이 바로 반응: 아래쪽 메뉴 자리(또는 오른쪽 위 나가기 버튼 자리)에 있으면 바로 나타나고, 벗어나면 바로 사라진다.
   // 키보드·터치처럼 마우스 위치를 모를 때만 1.5초 뒤에 사라진다.
-  let lastPt = null, curT = null;
+  let lastPt = null, curT = null, fsAt = 0;
   const inZone = () => {
     if(!lastPt) return false;
     const d = $('dock').getBoundingClientRect(), W = wrap.clientWidth;
@@ -468,6 +468,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   function showCtl(){ wrap.classList.remove('hide', 'nocur'); clearTimeout(hideT); if(isFull()) hideT = setTimeout(() => { if(!v.paused && !anyPop() && !inZone()) wrap.classList.add('hide'); }, 1500); }
   document.addEventListener('mousemove', ev => {
     if(!isFull()) return;
+    if(Date.now() - fsAt < 700 && !ev.movementX && !ev.movementY) return; // 전체화면으로 바뀔 때 브라우저가 보내는 가짜 마우스 이동은 무시
     lastPt = { x: ev.clientX, y: ev.clientY };
     clearTimeout(hideT);
     if(inZone() || v.paused || anyPop()) wrap.classList.remove('hide'); else wrap.classList.add('hide');
@@ -482,9 +483,9 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
   v.addEventListener('click', () => { if(wasHidden){ wasHidden = false; return; } if(v.src) toggle(); });
   v.addEventListener('dblclick', enterFs);
   const fsChange = () => {
-    wrap.classList.remove('hide', 'nocur'); clearTimeout(hideT); clearTimeout(curT); v.style.width = ''; v.style.height = ''; closePops();
+    wrap.classList.remove('hide', 'nocur'); clearTimeout(hideT); clearTimeout(curT); v.style.width = ''; v.style.height = ''; closePops(); fsAt = Date.now(); lastPt = null;
     const inFs = fsEl() === wrap; ico($('full'), inFs ? 'i-min' : 'i-max'); $('full').setAttribute('aria-label', inFs ? '전체화면 해제' : '전체화면');
-    setTimeout(() => { if(isFull()) enterFull(); else leaveFull(); if(isFull()) showCtl(); }, 60);
+    setTimeout(() => { if(isFull()) enterFull(); else leaveFull(); if(isFull()){ if(!v.paused && !anyPop()) wrap.classList.add('hide'); else showCtl(); } }, 60); // 전체화면에 들어가면 재생 중일 땐 메뉴를 바로 숨김
   };
   document.addEventListener('fullscreenchange', fsChange); document.addEventListener('webkitfullscreenchange', fsChange);
   window.addEventListener('resize', () => { if(mode === 'fit') doFit(); else apply(); });

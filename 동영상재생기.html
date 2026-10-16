@@ -189,7 +189,27 @@ html,body{height:100%;overflow:hidden}
 .mx[disabled]{opacity:.35;cursor:default}.mx[disabled]:hover{background:none}
 .mx i,.mh i{font-style:normal;color:var(--mut);font-size:9.5pt}
 .mh{display:flex;justify-content:space-between;gap:20px;padding:6px 10px;color:var(--tx);font-size:10.5pt}
-@media (max-width:640px){#wrap.cmp .mbar{display:none}#wrap.cmp .bar .ic{width:38px;height:38px}#wrap.cmp .zg .ic{width:34px}}
+@media (max-width:640px){#wrap.cmp .mbar{display:none}}
+/* 폰(좁은 화면, 터치가 주 입력): 아래 메뉴 버튼을 키움. PC(마우스)는 그대로 */
+@media (max-width:640px),(pointer:coarse){
+  #wrap.cmp .bar{padding:4px 8px 8px}
+  #wrap.cmp .bar .ic{width:44px;height:44px;border-radius:10px}
+  #wrap.cmp .bar .ic svg{width:22px;height:22px}
+  #wrap.cmp .bar .play svg{width:28px;height:28px}
+  #wrap.cmp .bar .ic.sp{min-width:48px;font-size:11pt}
+  #wrap.cmp .zg .ic{width:40px}
+  #wrap.cmp .pctb{height:40px;min-width:52px;font-size:11.5pt}
+  #wrap.cmp .fn{font-size:11pt}
+  #wrap.cmp #cur,#wrap.cmp #dur{font-size:10.5pt;min-width:2.8em}
+  #wrap.cmp input[type=range]{height:28px}
+  #wrap.cmp input[type=range]::-webkit-slider-runnable-track{height:5px}
+  #wrap.cmp input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-5.5px}
+  #wrap.cmp input[type=range]::-moz-range-thumb{width:16px;height:16px}
+  #wrap.cmp #mopop .ic{width:44px;height:44px}
+  #wrap.cmp #mopop .ic svg{width:22px;height:22px}
+  #wrap.cmp #mopop .ic.sp{min-width:48px}
+  #wrap.cmp #mopop .zg .ic{width:40px}
+}
 @media (prefers-reduced-motion:reduce){.dock{transition:none}}
 </style>
 </head>

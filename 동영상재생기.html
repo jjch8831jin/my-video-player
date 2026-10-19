@@ -247,7 +247,7 @@ html,body{height:100%;overflow:hidden}
   </defs>
 </svg>
 <div class="app">
-  <input type="file" id="fi" accept="video/*" multiple hidden>
+  <input type="file" id="fi" accept="video/*,application/octet-stream" multiple hidden>
   <div id="wrap">
     <div class="mbar" id="mbar"><div class="mi"><button class="mt" type="button">파일</button><div class="md"><button class="mx" type="button" data-c="open">동영상 열기</button><button class="mx" type="button" data-c="list">재생 목록</button></div></div><div class="mi"><button class="mt" type="button">재생</button><div class="md"><button class="mx" type="button" data-c="pp">재생 / 일시정지<i>Space</i></button><button class="mx" type="button" data-c="stop">정지</button><button class="mx" type="button" data-c="prev" id="mx-prev">이전 파일<i>P</i></button><button class="mx" type="button" data-c="next" id="mx-next">다음 파일<i>N</i></button><button class="mx" type="button" data-c="b10">10초 뒤로</button><button class="mx" type="button" data-c="f10">10초 앞으로</button><div style="height:1px;background:var(--line);margin:4px 6px"></div><button class="mx" type="button" data-c="mode-all">전체곡 반복</button><button class="mx" type="button" data-c="mode-one">한곡만 재생</button><button class="mx" type="button" data-c="mode-oner">한곡만 반복</button><button class="mx" type="button" data-c="mode-once">전체곡 한번만 재생</button><button class="mx" type="button" data-c="spd">재생 속도 바꾸기</button></div></div><div class="mi"><button class="mt" type="button">보기</button><div class="md"><button class="mx" type="button" data-c="full">전체화면<i>F</i></button><button class="mx" type="button" data-c="orig">원래 크기 (100%)<i>0</i></button><button class="mx" type="button" data-c="rst">처음 화면으로</button><button class="mx" type="button" data-c="sp">크게<i>+</i></button><button class="mx" type="button" data-c="sm">작게<i>−</i></button><button class="mx" type="button" data-c="rot">90° 회전</button></div></div><div class="mi"><button class="mt" type="button">도움말</button><div class="md"><div class="mh">재생 / 일시정지<i>Space</i></div><div class="mh">5초 뒤로 / 앞으로<i>← →</i></div><div class="mh">소리 크게 / 작게<i>↑ ↓</i></div><div class="mh">음소거<i>M</i></div><div class="mh">이전 / 다음 파일<i>P / N</i></div><div class="mh">전체화면<i>F</i></div><div class="mh">크게 / 작게 / 100%<i>+ − 0</i></div></div></div></div>
     <div class="stage" id="stage">
@@ -388,7 +388,7 @@ html,body{height:100%;overflow:hidden}
   function doFit(){ setScale(fitScale(), 'fit'); }
 
   let queue = [], qi = 0;
-  const okFile = f => /^(video|audio)\//.test(f.type) || /\.(mp4|webm|mkv|mov|m4v|avi|ogv|ogg|mp3|wav|m4a)$/i.test(f.name);
+  const okFile = f => /^video\//.test(f.type) || /\.(mp4|webm|mkv|mov|m4v|avi|ogv|wmv|flv|3gp|3g2|ts|m2ts)$/i.test(f.name);
   function loadQueue(list){
     const all = Array.from(list || []); if(!all.length) return;
     const good = all.filter(okFile);

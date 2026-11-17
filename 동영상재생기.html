@@ -155,7 +155,8 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
 #wrap.pw .bar{background:rgba(22,27,39,.93)}
 .popnote{border:1px dashed var(--line);border-radius:14px;color:var(--mut);font-size:12pt;text-align:center;padding:40px 16px}
 #wrap.hide .dock,#wrap.hide #xit{opacity:0;pointer-events:none}
-.stage video.zin{cursor:zoom-out}
+.stage video.zin{cursor:grab}
+.stage.pan,.stage.pan video.zin{cursor:grabbing}
 #wrap.nocur,#wrap.nocur *{cursor:none}
 @media (max-width:860px){
 }
@@ -397,9 +398,9 @@ html,body{height:100%;overflow:hidden}
     else { v.style.width = ''; v.style.height = ''; v.style.transform = ''; v.style.margin = ''; }
     $('lb2').textContent = Math.round(scale) + '%';
     layoutStage();
-    // 화면보다 크게 확대되면 마우스가 돋보기(-) 모양으로 바뀌고, 누르면 화면에 맞춤
-    const zin = !!n.w && scale > fitScale() + 0.5;
-    v.classList.toggle('zin', zin); v.title = zin ? '누르면 화면에 맞춥니다' : '';
+    // 화면보다 크게 확대되면 마우스가 손 모양으로 바뀌고, 끌어서 보고 싶은 부분을 가운데로 옮길 수 있음
+    const zin = !!n.w && (stage.scrollWidth > stage.clientWidth + 1 || stage.scrollHeight > stage.clientHeight + 1);
+    v.classList.toggle('zin', zin); v.title = zin ? '끌어서 화면을 옮길 수 있습니다' : '';
   }
   function setScale(p, m){ scale = Math.max(MIN, Math.min(MAX, p)); mode = m || 'free'; apply(); }
   function fitScale(){
@@ -706,7 +707,24 @@ html,body{height:100%;overflow:hidden}
   v.addEventListener('pause', () => { if(isFull()) showCtl(); });
   v.addEventListener('play', () => { if(isFull()) showCtl(); });
   v.addEventListener('pointerdown', () => { wasHidden = wrap.classList.contains('hide'); }, true);
-  v.addEventListener('click', () => { if(wasHidden){ wasHidden = false; return; } if(v.classList.contains('zin')){ doFit(); return; } if(v.src) toggle(); });
+  // 확대한 화면을 마우스로 끌어서 옮기기 (폰은 손가락으로 밀면 원래대로 움직임)
+  let drag = null, panned = false;
+  v.addEventListener('pointerdown', e => {
+    panned = false;
+    if(e.pointerType === 'touch' || e.button !== 0 || !v.classList.contains('zin')) return;
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, sl: stage.scrollLeft, st: stage.scrollTop };
+    e.preventDefault();
+  });
+  v.addEventListener('pointermove', e => {
+    if(!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if(!panned && Math.abs(dx) + Math.abs(dy) < 5) return;
+    if(!panned){ panned = true; stage.classList.add('pan'); try{ v.setPointerCapture(e.pointerId); }catch(err){} }
+    stage.scrollLeft = drag.sl - dx; stage.scrollTop = drag.st - dy;
+  });
+  const endDrag = e => { if(!drag || (e && e.pointerId !== drag.id)) return; drag = null; stage.classList.remove('pan'); try{ v.releasePointerCapture(e.pointerId); }catch(err){} };
+  v.addEventListener('pointerup', endDrag); v.addEventListener('pointercancel', endDrag); v.addEventListener('lostpointercapture', () => { if(drag){ drag = null; stage.classList.remove('pan'); } });
+  v.addEventListener('click', () => { if(panned){ panned = false; return; } if(wasHidden){ wasHidden = false; return; } if(v.src) toggle(); });
   v.addEventListener('dblclick', enterFs);
   const fsChange = () => {
     wrap.classList.remove('hide', 'nocur'); clearTimeout(hideT); clearTimeout(curT); v.style.width = ''; v.style.height = ''; closePops(); fsAt = Date.now(); lastPt = null;

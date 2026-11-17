@@ -87,6 +87,23 @@ input[type=range]:focus-visible{outline:2px solid var(--ac);outline-offset:2px;b
 .li .n{color:var(--mut);min-width:1.8em;font-variant-numeric:tabular-nums}
 .li .f{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li.cur{color:var(--ac)}.li.cur .n{color:var(--ac)}
+.lhead .hr{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+#lipop.grid{width:min(760px,100%);max-height:min(72vh,680px)}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:2px 2px 6px}
+.card{position:relative;min-width:0}
+.cb{display:flex;flex-direction:column;gap:6px;width:100%;background:none;border:2px solid transparent;border-radius:12px;padding:4px;text-align:left;color:var(--tx)}
+.cb:hover{background:var(--key)}
+.card.cur .cb{border-color:var(--ac)}
+.th{position:relative;width:100%;aspect-ratio:16/9;border-radius:9px;overflow:hidden;background:#05070c;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:9.5pt}
+.th img{width:100%;height:100%;object-fit:cover;display:block}
+.th .bn{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.7);color:#fff;font-size:9.5pt;padding:1px 8px;border-radius:999px;font-variant-numeric:tabular-nums}
+.card.cur .th .bn{background:var(--ac);color:#062925;font-weight:700}
+.th .du{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.75);color:#fff;font-size:9.5pt;padding:1px 6px;border-radius:6px;font-variant-numeric:tabular-nums}
+.th .du:empty{display:none}
+.cn{font-size:10.5pt;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all;padding:0 2px}
+.card.cur .cn{color:var(--ac)}
+.card .dx{position:absolute;right:9px;top:9px;width:32px;height:32px;background:rgba(0,0,0,.65);color:#fff}
+.card .dx:hover{background:#4a1f26}
 .lempty{padding:12px;color:var(--mut);font-size:11pt;text-align:center}
 .pill{height:40px;border-radius:999px;background:var(--key);border:1px solid var(--line);color:var(--ac2);font-weight:700;font-size:11pt;display:flex;align-items:center;gap:6px;padding:0 12px;flex:none;font-variant-numeric:tabular-nums}
 .pill svg{color:var(--tx);width:18px;height:18px}
@@ -327,7 +344,7 @@ html,body{height:100%;overflow:hidden}
   const anyPop = () => Object.values(pops).some(p => p.classList.contains('show'));
   const togglePop = k => { const was = pops[k].classList.contains('show'); closePops(); if(!was){ pops[k].classList.add('show'); $(k).classList.add('on'); } if(isFull()) showCtl(); };
   $('more').addEventListener('click', () => togglePop('more'));
-  $('list').addEventListener('click', () => { renderList(); togglePop('list'); });
+  $('list').addEventListener('click', () => { togglePop('list'); renderList(); });
   document.addEventListener('pointerdown', e => { if(anyPop() && !e.target.closest('.pop') && !e.target.closest('#more') && !e.target.closest('#list')) closePops(); }, true);
   // 폰: 보조 버튼들을 ⋯ 카드로 옮김
   let setNarrow = () => {};
@@ -401,6 +418,7 @@ html,body{height:100%;overflow:hidden}
       const byDate = (x, y) => (y.lastModified || 0) - (x.lastModified || 0);
       const top = fresh.slice().sort(byDate)[0];
       queue = queue.concat(fresh).sort(byDate); play(queue.indexOf(top));
+      if(fresh.length > 1 && !pops.list.classList.contains('show')){ togglePop('list'); renderList(); }
     }
     if(good.length < all.length) msg('동영상이 아닌 파일 ' + (all.length - good.length) + '개는 뺐습니다.');
   }
@@ -435,11 +453,55 @@ html,body{height:100%;overflow:hidden}
   const nextF = () => { if(qi < queue.length - 1) play(qi + 1); };
   const prevF = () => { if(qi > 0) play(qi - 1); };
   const navUi = () => { $('prev').disabled = !(queue.length && qi > 0); $('next').disabled = !(queue.length && qi < queue.length - 1); const a = $('mx-prev'), b = $('mx-next'); if(a) a.disabled = $('prev').disabled; if(b) b.disabled = $('next').disabled; };
+  // 재생 목록 미리보기(큰 그림) — 파일마다 한 장면을 그림으로 떠 둠. 폰 부담을 줄이려고 한 번에 하나씩 만듦.
+  let lview = 'grid'; try{ if(localStorage.getItem('vpListView') === 'list') lview = 'list'; }catch(e){}
+  const thumbs = new WeakMap(), tq = [], thumbEl = new Map(); let tBusy = false;
+  const listOpen = () => pops.list.classList.contains('show');
+  function wantThumb(f){ if(thumbs.has(f) || tq.indexOf(f) >= 0) return; tq.push(f); runThumb(); }
+  function runThumb(){
+    if(tBusy) return;
+    const f = tq.shift(); if(!f) return;
+    if(thumbs.has(f) || queue.indexOf(f) < 0){ runThumb(); return; }
+    tBusy = true;
+    const tv = document.createElement('video'); tv.muted = true; tv.playsInline = true; tv.preload = 'auto';
+    const u = URL.createObjectURL(f); let done = false;
+    const fin = (src, dur) => {
+      if(done) return; done = true; clearTimeout(to);
+      thumbs.set(f, { src: src, dur: (isFinite(dur) && dur > 0) ? dur : 0 });
+      tv.removeAttribute('src'); try{ tv.load(); }catch(e){} URL.revokeObjectURL(u);
+      tBusy = false; showThumb(f); setTimeout(runThumb, 30);
+    };
+    const to = setTimeout(() => fin('', tv.duration), 10000);
+    tv.addEventListener('loadedmetadata', () => { const d = tv.duration; try{ tv.currentTime = (isFinite(d) && d > 0) ? Math.min(d * 0.1, 30) : 1; }catch(e){ fin('', d); } });
+    tv.addEventListener('seeked', () => {
+      try{
+        const vw = tv.videoWidth || 16, vh = tv.videoHeight || 9, w = 320, h = Math.max(1, Math.round(w * vh / vw));
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(tv, 0, 0, w, h);
+        fin(c.toDataURL('image/jpeg', 0.72), tv.duration);
+      }catch(e){ fin('', tv.duration); }
+    });
+    tv.addEventListener('error', () => fin('', 0));
+    tv.src = u;
+  }
+  function paintThumb(th, f){
+    const t = thumbs.get(f), du = th.querySelector('.du'), old = th.querySelector('img, .ld');
+    if(old) old.remove();
+    if(t && t.src){ const im = document.createElement('img'); im.src = t.src; im.alt = ''; th.insertBefore(im, th.firstChild); }
+    else { const l = document.createElement('span'); l.className = 'ld'; l.textContent = t ? '미리보기 없음' : '불러오는 중…'; th.insertBefore(l, th.firstChild); }
+    du.textContent = (t && t.dur) ? fmt(t.dur) : '';
+  }
+  function showThumb(f){ const th = thumbEl.get(f); if(th && th.isConnected) paintThumb(th, f); }
   function renderList(){
-    const box = $('lipop'); box.innerHTML = '';
+    const box = $('lipop'), keep = box.scrollTop; box.innerHTML = ''; thumbEl.clear();
+    box.classList.toggle('grid', lview === 'grid' && queue.length > 0);
     if(!queue.length){ const d = document.createElement('div'); d.className = 'lempty'; d.textContent = '목록이 비어 있습니다. 열기 버튼으로 파일을 고르세요.'; box.appendChild(d); return; }
     const head = document.createElement('div'); head.className = 'lhead';
     const cnt = document.createElement('span'); cnt.textContent = '파일 ' + queue.length + '개';
+    const hr = document.createElement('div'); hr.className = 'hr';
+    const vt = document.createElement('button'); vt.type = 'button'; vt.className = 'clr';
+    vt.textContent = lview === 'grid' ? '목록으로 보기' : '큰 그림으로 보기';
+    vt.addEventListener('click', e => { e.stopPropagation(); lview = lview === 'grid' ? 'list' : 'grid'; try{ localStorage.setItem('vpListView', lview); }catch(err){} box.scrollTop = 0; renderList(); });
     const clr = document.createElement('button'); clr.type = 'button'; clr.className = 'clr' + (clrArm ? ' arm' : '');
     clr.innerHTML = '<svg><use href="#i-x"/></svg>' + (clrArm ? '한 번 더 누르면 모두 지웁니다' : '모두 지우기');
     clr.addEventListener('click', e => {
@@ -447,18 +509,42 @@ html,body{height:100%;overflow:hidden}
       if(clrArm){ clrArm = false; emptyPlayer(); return; }
       clrArm = true; renderList(); clrT = setTimeout(() => { clrArm = false; renderList(); }, 3000);
     });
-    head.appendChild(cnt); head.appendChild(clr); box.appendChild(head);
-    queue.forEach((f, i) => {
-      const row = document.createElement('div'); row.className = 'lrow';
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'li' + (i === qi ? ' cur' : '');
-      const n = document.createElement('span'); n.className = 'n'; n.textContent = i + 1;
-      const t = document.createElement('span'); t.className = 'f'; t.textContent = f.name;
-      b.appendChild(n); b.appendChild(t);
-      b.addEventListener('click', () => { play(i); closePops(); });
+    hr.appendChild(vt); hr.appendChild(clr);
+    head.appendChild(cnt); head.appendChild(hr); box.appendChild(head);
+    const delBtn = i => {
       const x = document.createElement('button'); x.type = 'button'; x.className = 'dx'; x.setAttribute('aria-label', '목록에서 지우기'); x.innerHTML = '<svg><use href="#i-x"/></svg>';
       x.addEventListener('click', e => { e.stopPropagation(); removeAt(i); });
-      row.appendChild(b); row.appendChild(x); box.appendChild(row);
-    });
+      return x;
+    };
+    if(lview === 'grid'){
+      const g = document.createElement('div'); g.className = 'lgrid';
+      queue.forEach((f, i) => {
+        const card = document.createElement('div'); card.className = 'card' + (i === qi ? ' cur' : '');
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'cb'; b.title = f.name;
+        const th = document.createElement('div'); th.className = 'th';
+        const bn = document.createElement('span'); bn.className = 'bn'; bn.textContent = i === qi ? '▶ ' + (i + 1) : (i + 1);
+        const du = document.createElement('span'); du.className = 'du';
+        th.appendChild(bn); th.appendChild(du);
+        const cn = document.createElement('span'); cn.className = 'cn'; cn.textContent = f.name.replace(/\.[^.\/\\]+$/, '');
+        b.appendChild(th); b.appendChild(cn);
+        b.addEventListener('click', () => { play(i); closePops(); });
+        card.appendChild(b); card.appendChild(delBtn(i)); g.appendChild(card);
+        thumbEl.set(f, th); paintThumb(th, f);
+      });
+      box.appendChild(g);
+      if(listOpen()) queue.forEach(wantThumb);
+    } else {
+      queue.forEach((f, i) => {
+        const row = document.createElement('div'); row.className = 'lrow';
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'li' + (i === qi ? ' cur' : '');
+        const n = document.createElement('span'); n.className = 'n'; n.textContent = i + 1;
+        const t = document.createElement('span'); t.className = 'f'; t.textContent = f.name;
+        b.appendChild(n); b.appendChild(t);
+        b.addEventListener('click', () => { play(i); closePops(); });
+        row.appendChild(b); row.appendChild(delBtn(i)); box.appendChild(row);
+      });
+    }
+    box.scrollTop = keep;
   }
   $('prev').addEventListener('click', prevF);
   $('next').addEventListener('click', nextF);

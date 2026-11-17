@@ -612,7 +612,14 @@ html,body{height:100%;overflow:hidden}
   ['dragleave', 'drop'].forEach(e => document.addEventListener(e, ev => { ev.preventDefault(); stage.classList.remove('drag'); }));
   document.addEventListener('drop', ev => { loadQueue(ev.dataTransfer && ev.dataTransfer.files); });
 
-  v.addEventListener('loadedmetadata', () => { $('dur').textContent = fmt(v.duration); tmUpd(); const f = fitScale(); if(f < 100) setScale(f, 'fit'); else setScale(100, 'free'); }); // 처음엔 원래 크기(100%), 화면보다 크면 화면에 맞게 줄임
+  let sized = false; // 첫 파일만 기본 크기로 시작하고, 그다음 파일부터는 사용자가 맞춰 둔 크기를 그대로 씀
+  v.addEventListener('loadedmetadata', () => {
+    $('dur').textContent = fmt(v.duration); tmUpd();
+    if(!sized){ sized = true; const f = fitScale(); if(f < 100) setScale(f, 'fit'); else setScale(100, 'free'); } // 처음엔 원래 크기(100%), 화면보다 크면 화면에 맞게 줄임
+    else if(mode === 'fit') doFit(); // '화면에 맞춤' 상태였으면 새 파일도 화면에 맞춤
+    else apply(); // 직접 키우거나 줄인 배율은 그대로 유지
+    stage.scrollLeft = (stage.scrollWidth - stage.clientWidth) / 2; stage.scrollTop = (stage.scrollHeight - stage.clientHeight) / 2; // 확대된 상태면 가운데부터 보이게
+  });
   v.addEventListener('error', () => { msg('이 브라우저에서 재생할 수 없는 파일입니다.'); });
   const setPP = () => { const playing = !v.paused && !v.ended; ico($('pp'), playing ? 'i-pause' : 'i-play'); $('pp').setAttribute('aria-label', playing ? '일시정지' : '재생'); };
   v.addEventListener('play', setPP); v.addEventListener('pause', setPP); v.addEventListener('ended', setPP);

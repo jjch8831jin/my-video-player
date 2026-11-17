@@ -233,6 +233,32 @@ html,body{height:100%;overflow:hidden}
   #wrap.cmp #mopop .zg .ic{width:40px}
 }
 @media (prefers-reduced-motion:reduce){.dock{transition:none}}
+/* PC: 위 메뉴줄과 아래 조작줄을 얇고 작게 */
+@media (pointer:fine) and (min-width:641px){
+  .mbar{height:22px;padding:0 4px}
+  .mt{height:20px;padding:0 8px;font-size:9.5pt;border-radius:5px}
+  .md{top:calc(100% + 2px)}
+  .mx{height:28px;font-size:9.5pt}
+  .mh{font-size:9.5pt;padding:5px 10px}
+  #wrap.cmp .bar{padding:1px 8px 2px}
+  #wrap.cmp .bar .seekw{gap:8px}
+  #wrap.cmp .bar .ic{width:26px;height:26px;border-radius:6px}
+  #wrap.cmp .bar .ic svg{width:15px;height:15px}
+  #wrap.cmp .bar .play svg{width:18px;height:18px}
+  #wrap.cmp .bar .ic.sp{min-width:32px;padding:0 5px;font-size:9pt}
+  #wrap.cmp .zg .ic{width:22px}
+  #wrap.cmp .pctb{height:24px;min-width:38px;font-size:9pt}
+  #wrap.cmp .dv{height:16px;margin:0 4px}
+  #wrap.cmp .fn{font-size:9.5pt}
+  #wrap.cmp #cur,#wrap.cmp #dur{font-size:9pt;min-width:2.5em}
+  #wrap.cmp input[type=range]{height:14px}
+  #wrap.cmp input[type=range]::-webkit-slider-runnable-track{height:3px}
+  #wrap.cmp input[type=range]::-webkit-slider-thumb{width:10px;height:10px;margin-top:-3.5px}
+  #wrap.cmp input[type=range]::-moz-range-track,#wrap.cmp input[type=range]::-moz-range-progress{height:3px}
+  #wrap.cmp input[type=range]::-moz-range-thumb{width:10px;height:10px}
+  #wrap.cmp:not(.nw) .bar .vol input{width:64px}
+  #wrap.cmp .msg{top:30px}
+}
 </style>
 </head>
 <body>
